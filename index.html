@@ -4945,4 +4945,89 @@ No alcanza solo con la eficiencia del chip.<br></p>
       fetch(GAS_URL, {
         method: 'POST',
         mode: 'no-cors', // Apps Script no envía headers CORS; igual procesa el envío
-       
+        body: new URLSearchParams(new FormData(form))
+      })
+      .then(function()  { setLoading(false); showSuccess(); })
+      .catch(function() { setLoading(false); showSuccess(); }); // no-cors no deja leer la respuesta
+    });
+
+    // Tracking WA click
+    if (ctaBtnWa) {
+      ctaBtnWa.addEventListener('click', function() {
+        if (typeof gtag === 'function') gtag('event', 'whatsapp_clicked', { event_category: 'cta_final' });
+        if (typeof fbq === 'function')  fbq('track', 'Contact');
+      });
+    }
+  })();
+
+
+  /* ─────────────────────────────────────────────────
+     COUNTDOWN PRE-VENTA · IIFE
+     Fecha de cierre: 30 de junio 2026 23:59:59 ART
+  ───────────────────────────────────────────────── */
+  (function() {
+    var PREVENTA_END = new Date('2026-06-30T23:59:59-03:00');
+
+    // IDs de los contadores en los 3 sectores
+    var sectors = [
+      { d: 'cdHeroDias',  h: 'cdHeroHoras',  m: 'cdHeroMins',  s: 'cdHeroSegs',  exp: 'cdHeroExp',  wrap: null },
+      { d: 'cdProdDias',  h: 'cdProdHoras',  m: 'cdProdMins',  s: 'cdProdSegs',  exp: 'cdProdExp',  wrap: null },
+      { d: 'cdCtaDias',   h: 'cdCtaHoras',   m: 'cdCtaMins',   s: 'cdCtaSegs',   exp: 'cdCtaExp',   wrap: null }
+    ];
+
+    function pad(n) { return n < 10 ? '0' + n : String(n); }
+
+    function update() {
+      var now  = new Date();
+      var diff = PREVENTA_END - now;
+
+      if (diff <= 0) {
+        // Pre-venta expirada: ocultar contadores y mostrar mensaje
+        sectors.forEach(function(sec) {
+          ['d','h','m','s'].forEach(function(k) {
+            var el = document.getElementById(sec[k]);
+            if (el) el.closest('.countdown__unit') && (el.closest('.countdown__unit').style.display = 'none');
+          });
+          // Ocultar separadores del sector
+          var units = document.getElementById(sec.d);
+          if (units) {
+            var countdown = units.closest('.countdown');
+            if (countdown) {
+              Array.prototype.forEach.call(countdown.querySelectorAll('.countdown__sep'), function(sep) {
+                sep.style.display = 'none';
+              });
+            }
+          }
+          var expEl = document.getElementById(sec.exp);
+          if (expEl) expEl.style.display = 'block';
+        });
+        clearInterval(timer);
+        return;
+      }
+
+      var totalSecs = Math.floor(diff / 1000);
+      var dias  = Math.floor(totalSecs / 86400);
+      var horas = Math.floor((totalSecs % 86400) / 3600);
+      var mins  = Math.floor((totalSecs % 3600) / 60);
+      var segs  = totalSecs % 60;
+
+      sectors.forEach(function(sec) {
+        var elD = document.getElementById(sec.d);
+        var elH = document.getElementById(sec.h);
+        var elM = document.getElementById(sec.m);
+        var elS = document.getElementById(sec.s);
+        if (elD) elD.textContent = pad(dias);
+        if (elH) elH.textContent = pad(horas);
+        if (elM) elM.textContent = pad(mins);
+        if (elS) elS.textContent = pad(segs);
+      });
+    }
+
+    update(); // ejecutar de inmediato para evitar flash "--"
+    var timer = setInterval(update, 1000);
+  })();
+  </script>
+
+
+</body>
+</html>
